@@ -525,4 +525,371 @@ class AuthController extends Controller
             'token' => $token,
         ]);
     }
+
+    public function loginV1(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|email',
+                'password' => 'required',
+            ],
+            [
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'password.required' => 'Password wajib diisi.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Email tidak terdaftar.',
+            ], 401);
+        }
+
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Password salah.',
+            ], 401);
+        }
+
+        $token = Str::random(60);
+
+        $user->remember_token = $token;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Login berhasil.',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+                'token' => $token,
+            ],
+        ]);
+    }
+
+    public function registerV1(Request $request)
+    {
+        // =========================================================
+        // VALIDASI INPUT
+        // =========================================================
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'name' => 'required|string|max:255',
+                'gender' => 'required|in:L,P',
+                'email' => 'required|email|unique:users,email',
+                'phone' => 'required|numeric|unique:users,phone',
+            ],
+            [
+                'name.required' => 'Nama wajib diisi.',
+
+                'gender.required' => 'Jenis kelamin wajib dipilih.',
+                'gender.in' => 'Jenis kelamin harus L atau P.',
+
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'email.unique' => 'Email sudah terdaftar.',
+
+                'phone.required' => 'Nomor handphone wajib diisi.',
+                'phone.numeric' => 'Nomor handphone harus berupa angka.',
+                'phone.unique' => 'Nomor handphone sudah terdaftar.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            // =========================================================
+            // Generate username dari email
+            // Contoh:
+            // andi.pratama@mail.com -> andi.pratama
+            // =========================================================
+            $baseUsername = strtolower(strtok($request->email, '@'));
+
+            $username = $baseUsername;
+            $counter = 1;
+
+            while (User::where('username', $username)->exists()) {
+                $username = $baseUsername . $counter;
+                $counter++;
+            }
+
+            // Password default
+            $plainPassword = '123456';
+
+            // =========================================================
+            // Simpan user
+            // =========================================================
+            $user = User::create([
+                'name' => $request->name,
+                'username' => $username,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'gender' => $request->gender,
+                'password' => Hash::make($plainPassword),
+                'role' => 'user',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Registrasi berhasil.',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'password' => $plainPassword,
+                ],
+            ], 201);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Registrasi gagal.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function profileV1(Request $request)
+    {
+        // =========================================================
+        // Ambil data user yang sedang login
+        // =========================================================
+        $authUser = $request->attributes->get('user');
+
+        $user = User::find($authUser->id);
+
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Data pengguna tidak ditemukan.',
+            ], 404);
+        }
+
+        // =========================================================
+        // Format tanggal lahir
+        // =========================================================
+        $formatDate = fn ($date) => $date
+            ? Carbon::parse($date)->format('d-m-Y')
+            : null;
+
+        // =========================================================
+        // Data profil
+        // =========================================================
+        $data = [
+            'user_id'      => $user->id,
+            'name'         => $user->name,
+            'username'     => $user->username,
+            'email'        => $user->email,
+            'phone'        => $user->phone,
+            'gender'       => $user->gender,
+            'photo'        => $user->photo ?: 'user.png',
+            'birth_place'  => $user->birth_place,
+            'birth_date'   => $formatDate($user->birth_date),
+        ];
+
+        return response()->json([
+            'status' => true,
+            'data' => $data,
+        ]);
+    }
+
+    public function updateProfileV1(Request $request)
+    {
+        // =========================================================
+        // Ambil user dari middleware
+        // =========================================================
+        $user = $request->attributes->get('user');
+
+        // =========================================================
+        // Konversi format tanggal lahir
+        // =========================================================
+        if ($request->filled('birth_date')) {
+            try {
+                $date = $request->birth_date;
+
+                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $date)) {
+                    $date = Carbon::createFromFormat('d-m-Y', $date);
+                } else {
+                    $date = Carbon::parse($date);
+                }
+
+                $request->merge([
+                    'birth_date' => $date->format('Y-m-d'),
+                ]);
+            } catch (\Exception $e) {
+                // Biarkan validator menangani jika format salah
+            }
+        }
+
+        // =========================================================
+        // Validasi
+        // =========================================================
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'name'         => 'sometimes|string|max:255',
+
+                'email' => [
+                    'sometimes',
+                    'email',
+                    'max:255',
+                    Rule::unique('users', 'email')->ignore($user->id),
+                ],
+
+                'phone' => [
+                    'sometimes',
+                    'string',
+                    'min:10',
+                    'max:15',
+                    Rule::unique('users', 'phone')->ignore($user->id),
+                ],
+
+                'gender'       => 'sometimes|in:L,P',
+                'birth_place'  => 'sometimes|string|max:100',
+                'birth_date'   => 'sometimes|date_format:Y-m-d|before:today',
+
+                'photo' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ],
+            [
+                'name.max' => 'Nama maksimal 255 karakter.',
+
+                'email.email'  => 'Format email tidak valid.',
+                'email.unique' => 'Email sudah digunakan.',
+                'email.max'    => 'Email maksimal 255 karakter.',
+
+                'phone.min'    => 'Nomor HP minimal 10 digit.',
+                'phone.max'    => 'Nomor HP maksimal 15 digit.',
+                'phone.unique' => 'Nomor HP sudah digunakan.',
+
+                'gender.in' => 'Jenis kelamin harus L atau P.',
+
+                'birth_place.max'       => 'Tempat lahir maksimal 100 karakter.',
+                'birth_date.date_format' => 'Format tanggal lahir harus YYYY-MM-DD.',
+                'birth_date.before'      => 'Tanggal lahir harus sebelum hari ini.',
+
+                'photo.image' => 'File harus berupa gambar.',
+                'photo.mimes' => 'Foto harus berformat jpeg, png, jpg, atau gif.',
+                'photo.max'   => 'Ukuran foto maksimal 2 MB.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // =========================================================
+        // Data yang akan diupdate
+        // =========================================================
+        $data = $validator->validated();
+
+        // =========================================================
+        // Generate username jika email berubah
+        // =========================================================
+        if (isset($data['email']) && $data['email'] !== $user->email) {
+
+            $baseUsername = strtolower(strtok($data['email'], '@'));
+
+            $username = $baseUsername;
+            $counter = 1;
+
+            while (
+                User::where('username', $username)
+                    ->where('id', '!=', $user->id)
+                    ->exists()
+            ) {
+                $username = $baseUsername.$counter;
+                $counter++;
+            }
+
+            $data['username'] = $username;
+        }
+
+        // =========================================================
+        // Upload Foto (Tidak Diubah)
+        // =========================================================
+        if ($request->hasFile('photo')) {
+
+            // Hapus foto lama jika ada
+            if (! empty($user->photo)) {
+                $oldPath = public_path('images/'.$user->photo);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+
+            // Pastikan folder tersedia
+            $destinationPath = public_path('images');
+            if (! is_dir($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            // Simpan foto baru
+            $fileName = Str::random(20).'.'.$request->file('photo')->extension();
+            $request->file('photo')->move($destinationPath, $fileName);
+
+            // Simpan nama file ke database
+            $data['photo'] = $fileName;
+        }
+
+        // =========================================================
+        // Update profil
+        // =========================================================
+        $user->update($data);
+
+        $user->refresh();
+
+        // =========================================================
+        // Response
+        // =========================================================
+        return response()->json([
+            'status' => true,
+            'message' => 'Profil berhasil diperbarui.',
+            'data' => [
+                'id'          => $user->id,
+                'name'        => $user->name,
+                'username'    => $user->username,
+                'email'       => $user->email,
+                'phone'       => $user->phone,
+                'gender'      => $user->gender,
+                'birth_place' => $user->birth_place,
+                'birth_date'  => $user->birth_date,
+                'photo'       => $user->photo,
+            ],
+        ]);
+    }
 }

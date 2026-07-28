@@ -14,53 +14,49 @@ class ANotificationSeeder extends Seeder
     {
         $now = now();
 
-        $notifications = [
-            [
-                'user_id' => 2,
-                'title' => 'Selamat Datang',
-                'message' => 'Selamat datang di Aplikasi Field Survey.',
-                'is_read' => true,
-            ],
-            [
-                'user_id' => 3,
-                'title' => 'Survey Berhasil Disimpan',
-                'message' => 'Data survey berhasil disimpan.',
-                'is_read' => true,
-            ],
-            [
-                'user_id' => 4,
-                'title' => 'Survey Menunggu Review',
-                'message' => 'Survey Anda sedang menunggu proses review.',
-                'is_read' => false,
-            ],
-            [
-                'user_id' => 5,
-                'title' => 'Survey Selesai',
-                'message' => 'Survey telah berhasil diselesaikan.',
-                'is_read' => true,
-            ],
-            [
-                'user_id' => 6,
-                'title' => 'Lokasi Berhasil Tersimpan',
-                'message' => 'Koordinat GPS berhasil disimpan.',
-                'is_read' => false,
-            ],
+        // Ambil seluruh user dengan role = user
+        $users = DB::table('users')
+            ->where('role', 'user')
+            ->get();
+
+        $titles = [
+            'Selamat Datang',
+            'Survey Berhasil Disimpan',
+            'Survey Menunggu Review',
+            'Survey Selesai',
+            'Lokasi Berhasil Tersimpan',
+            'Survey Baru',
+            'Data Berhasil Diperbarui',
+            'Terima Kasih',
+            'Informasi Survey',
+            'Pengingat Survey'
         ];
 
-        // Tambahkan hingga menjadi 20 data
-        for ($i = 6; $i <= 20; $i++) {
+        $messages = [
+            'Selamat datang di Aplikasi Field Survey.',
+            'Data survey berhasil disimpan.',
+            'Survey Anda sedang menunggu proses review.',
+            'Survey telah berhasil diselesaikan.',
+            'Koordinat GPS berhasil disimpan.',
+            'Silakan lengkapi data survey Anda.',
+            'Data survey berhasil diperbarui.',
+            'Terima kasih telah berpartisipasi dalam survey.',
+            'Terdapat informasi terbaru mengenai survey.',
+            'Jangan lupa menyelesaikan survey yang masih berlangsung.'
+        ];
+
+        $notifications = [];
+
+        foreach ($users as $user) {
 
             $notifications[] = [
-                'user_id' => rand(2, 20),
-                'title' => "Notifikasi #{$i}",
-                'message' => "Ini adalah notifikasi ke-{$i} dari sistem Field Survey.",
-                'is_read' => rand(0, 1),
+                'user_id'    => $user->id,
+                'title'      => $titles[array_rand($titles)],
+                'message'    => $messages[array_rand($messages)],
+                'is_read'    => rand(0, 1),
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
-        }
-
-        foreach ($notifications as &$notification) {
-            $notification['created_at'] = $now;
-            $notification['updated_at'] = $now;
         }
 
         DB::table('a_notifications')->insert($notifications);

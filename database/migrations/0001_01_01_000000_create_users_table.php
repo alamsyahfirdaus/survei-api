@@ -43,7 +43,7 @@ return new class extends Migration
             // =========================
             // ROLE / PERAN PENGGUNA
             // =========================
-            $table->enum('role', ['admin', 'konselor', 'konseli'])->nullable();
+            $table->enum('role', ['admin', 'konselor', 'konseli', 'user'])->nullable();
             // Peran pengguna dalam sistem:
             // admin = pengelola sistem
             // konselor = tenaga konseling

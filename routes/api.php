@@ -13,7 +13,6 @@ use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserDeviceController;
 use App\Http\Controllers\Api\PresentationController;
-use App\Http\Controllers\Api\AUserController;
 use App\Services\Agora\AgoraService;
 use Illuminate\Support\Facades\Route;
 
@@ -95,9 +94,9 @@ Route::get('/image/{filename}', function ($filename) {
 
 // SURVEY (TANPA TOKEN)
 Route::prefix('v1')->group(function () {
-    Route::get('/users', [AUserController::class, 'users']);
-    Route::post('/login', [AUserController::class, 'login']);
-    Route::post('/register', [AUserController::class, 'register']);
+    Route::get('/users', [AuthController::class, 'users']);
+    Route::post('/login', [AuthController::class, 'loginV1']);
+    Route::post('/register', [AuthController::class, 'registerV1']);
 });
 
 Route::middleware('api.auth')->group(function () {
@@ -193,9 +192,12 @@ Route::middleware('api.auth')->group(function () {
 
     // SURVEY (MENGGUNAKAN TOKEN)
     Route::prefix('v1')->group(function () {
-        Route::post('/logout', [AUserController::class, 'logout']);
-        Route::get('/profile', [AUserController::class, 'profile']);
-        Route::post('/profile', [AUserController::class, 'updateProfile']);
+        Route::get('/auto-login', [AuthController::class, 'autoLogin']);
+        Route::get('/profile', [AuthController::class, 'profileV1']);
+        Route::match(['post', 'put'], '/profile/update', [AuthController::class, 'updateProfileV1']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
+        Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+        Route::post('/logout', [AuthController::class, 'logout']);
     });
 });
 

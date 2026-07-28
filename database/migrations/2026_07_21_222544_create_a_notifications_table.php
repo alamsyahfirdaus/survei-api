@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->foreignId('user_id')
                 ->references('id')
-                ->on('a_users')
+                ->on('users')
                 ->cascadeOnDelete();
 
             $table->string('title', 150);

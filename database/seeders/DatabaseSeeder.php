@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             CounselingChatMessagesSeeder::class,
             EvaluationSeeder::class,
             CounselingResumeOptionSeeder::class,
-            AUserSeeder::class,
+            // AUserSeeder::class,
             ASurveyCategorySeeder::class,
             ASurveySeeder::class,
             ANotificationSeeder::class,

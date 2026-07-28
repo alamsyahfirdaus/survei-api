@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             
             $table->foreignId('user_id')
-                ->constrained('a_users')
+                ->constrained('users')
                 ->cascadeOnDelete();
 
             $table->foreignId('category_id')

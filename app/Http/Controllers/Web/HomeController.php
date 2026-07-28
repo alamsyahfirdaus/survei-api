@@ -20,6 +20,11 @@ class HomeController extends Controller
 {
     public function index()
     {
+        echo 'Hello World!';
+    }
+
+    public function index1()
+    {
         $videos = Cache::remember(
             'youtube_videos',
             now()->addHours(1),

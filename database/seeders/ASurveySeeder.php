@@ -12,103 +12,68 @@ class ASurveySeeder extends Seeder
      */
     public function run(): void
     {
-        $surveys = [
-            [
-                'user_id' => 2,
-                'category_id' => 1,
-                'title' => 'Jalan Berlubang di Jalan Ahmad Yani',
-                'description' => 'Ditemukan jalan berlubang yang dapat membahayakan pengguna jalan.',
-                'photo' => 'survey/jalan1.jpg',
-                'latitude' => -7.3505800,
-                'longitude' => 108.2171600,
-                'address' => 'Jl. Ahmad Yani, Tasikmalaya',
-                'qr_code' => 'QR0001',
-                'status' => 'selesai',
-            ],
-            [
-                'user_id' => 3,
-                'category_id' => 2,
-                'title' => 'Retakan pada Jembatan Ciwulan',
-                'description' => 'Retakan kecil ditemukan pada sisi jembatan.',
-                'photo' => 'survey/jembatan1.jpg',
-                'latitude' => -7.3452100,
-                'longitude' => 108.2245600,
-                'address' => 'Jembatan Ciwulan',
-                'qr_code' => 'QR0002',
-                'status' => 'draft',
-            ],
-            [
-                'user_id' => 4,
-                'category_id' => 3,
-                'title' => 'Drainase Tersumbat',
-                'description' => 'Saluran drainase dipenuhi sampah sehingga air tidak mengalir.',
-                'photo' => 'survey/drainase1.jpg',
-                'latitude' => -7.3412000,
-                'longitude' => 108.2105000,
-                'address' => 'Jl. KHZ Mustofa',
-                'qr_code' => 'QR0003',
-                'status' => 'selesai',
-            ],
-            [
-                'user_id' => 5,
-                'category_id' => 4,
-                'title' => 'Lampu Jalan Mati',
-                'description' => 'Lampu penerangan jalan tidak menyala pada malam hari.',
-                'photo' => 'survey/lampu1.jpg',
-                'latitude' => -7.3388000,
-                'longitude' => 108.2235000,
-                'address' => 'Jl. HZ Mustofa',
-                'qr_code' => 'QR0004',
-                'status' => 'draft',
-            ],
-            [
-                'user_id' => 6,
-                'category_id' => 5,
-                'title' => 'Trotoar Rusak',
-                'description' => 'Trotoar mengalami kerusakan pada beberapa titik.',
-                'photo' => 'survey/trotoar1.jpg',
-                'latitude' => -7.3399000,
-                'longitude' => 108.2157000,
-                'address' => 'Jl. Sutisna Senjaya',
-                'qr_code' => 'QR0005',
-                'status' => 'selesai',
-            ],
+        $users = DB::table('users')
+            ->where('role', 'user')
+            ->orderBy('id')
+            ->get();
+
+        $titles = [
+            'Jalan Berlubang',
+            'Retakan Jembatan',
+            'Drainase Tersumbat',
+            'Lampu Jalan Mati',
+            'Trotoar Rusak',
+            'Sampah Menumpuk',
+            'Pohon Tumbang',
+            'Marka Jalan Pudar',
+            'Rambu Rusak',
+            'Genangan Air',
+            'Saluran Air Rusak',
+            'Pagar Pengaman Rusak',
+            'Fasilitas Umum Rusak',
+            'Bangunan Terbengkalai',
+            'Kemacetan Lalu Lintas',
+            'Parkir Liar',
+            'Kerusakan Aspal',
+            'Jembatan Rusak',
+            'Lingkungan Kumuh',
+            'Penerangan Kurang'
         ];
 
-        // Tambahkan data hingga menjadi 20 record
-        for ($i = 6; $i <= 20; $i++) {
+        $descriptions = [
+            'Ditemukan kondisi yang memerlukan tindak lanjut dari pihak terkait.',
+            'Hasil survei menunjukkan perlunya perbaikan pada lokasi tersebut.',
+            'Objek survei memerlukan penanganan agar tidak membahayakan masyarakat.',
+            'Kondisi lapangan telah didokumentasikan untuk proses tindak lanjut.',
+            'Ditemukan beberapa kerusakan yang perlu segera diperbaiki.'
+        ];
 
-            $surveys[] = [
-                'user_id' => rand(2, 20),
-                'category_id' => rand(1, 20),
-                'title' => "Survey Lapangan #{$i}",
-                'description' => "Hasil survey lapangan ke-{$i}. Ditemukan beberapa kondisi yang memerlukan tindak lanjut.",
-                'photo' => "survey/photo{$i}.jpg",
-                'latitude' => -7.3500000 + ($i * 0.001),
-                'longitude' => 108.2200000 + ($i * 0.001),
-                'address' => "Lokasi Survey {$i}, Kota Tasikmalaya",
-                'qr_code' => "QR" . str_pad($i, 4, '0', STR_PAD_LEFT),
-                'status' => rand(0,1) ? 'draft' : 'selesai',
-            ];
-        }
+        foreach ($users as $index => $user) {
 
-        foreach ($surveys as $survey) {
+            $i = $index + 1;
 
             DB::table('a_surveys')->updateOrInsert(
 
                 [
-                    'title' => $survey['title']
+                    'title' => $titles[$index % count($titles)],
+                    'user_id' => $user->id,
                 ],
 
-                array_merge($survey, [
-
+                [
+                    'user_id' => $user->id,
+                    'category_id' => (($index % 20) + 1),
+                    'title' => $titles[$index % count($titles)],
+                    'description' => $descriptions[array_rand($descriptions)],
+                    'photo' => "survey/photo{$i}.jpg",
+                    'latitude' => -7.3500000 + ($i * 0.001),
+                    'longitude' => 108.2200000 + ($i * 0.001),
+                    'address' => "Lokasi Survey {$i}, Kota Tasikmalaya",
+                    'qr_code' => 'QR' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                    'status' => rand(0, 1) ? 'draft' : 'selesai',
                     'created_at' => now(),
                     'updated_at' => now(),
-
-                ])
-
+                ]
             );
-
         }
     }
 }
