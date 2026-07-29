@@ -94,7 +94,7 @@ Route::get('/image/{filename}', function ($filename) {
 
 // SURVEY (TANPA TOKEN)
 Route::prefix('v1')->group(function () {
-    Route::get('/users', [AuthController::class, 'users']);
+    Route::get('/users', [AuthController::class, 'getRoleUsers']);
     Route::post('/login', [AuthController::class, 'loginV1']);
     Route::post('/register', [AuthController::class, 'registerV1']);
 });

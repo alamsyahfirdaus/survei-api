@@ -705,6 +705,15 @@ class AuthController extends Controller
             : null;
 
         // =========================================================
+        // Format jenis kelamin
+        // =========================================================
+        $gender = match ($user->gender) {
+            'L' => 'Laki-Laki',
+            'P' => 'Perempuan',
+            default => null,
+        };
+
+        // =========================================================
         // Data profil
         // =========================================================
         $data = [
@@ -713,7 +722,7 @@ class AuthController extends Controller
             'username'     => $user->username,
             'email'        => $user->email,
             'phone'        => $user->phone,
-            'gender'       => $user->gender,
+            'gender'       => $gender,
             'photo'        => $user->photo ?: 'user.png',
             'birth_place'  => $user->birth_place,
             'birth_date'   => $formatDate($user->birth_date),
@@ -890,6 +899,29 @@ class AuthController extends Controller
                 'birth_date'  => $user->birth_date,
                 'photo'       => $user->photo,
             ],
+        ]);
+    }
+
+    public function getRoleUsers()
+    {
+        $users = User::select([
+                'id',
+                'name',
+                'username',
+                'email',
+                'phone',
+                'gender',
+                'photo',
+            ])
+            ->where('role', 'user')
+            ->where('is_active', 1)
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Data pengguna berhasil diambil.',
+            'data' => $users,
         ]);
     }
 }
