@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserDeviceController;
 use App\Http\Controllers\Api\PresentationController;
+use App\Http\Controllers\Api\SurveyController;
 use App\Services\Agora\AgoraService;
 use Illuminate\Support\Facades\Route;
 
@@ -192,12 +193,25 @@ Route::middleware('api.auth')->group(function () {
 
     // SURVEY (MENGGUNAKAN TOKEN)
     Route::prefix('v1')->group(function () {
+
+        // Authentication
         Route::get('/auto-login', [AuthController::class, 'autoLogin']);
         Route::get('/profile', [AuthController::class, 'profileV1']);
         Route::match(['post', 'put'], '/update-profile', [AuthController::class, 'updateProfileV1']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
         Route::post('/logout', [AuthController::class, 'logout']);
+
+        // Category
+        Route::get('/categories', [SurveyController::class, 'surveyCategories']);
+
+        // Survey
+        Route::prefix('surveys')->group(function () {
+            Route::get('/', [SurveyController::class, 'index']);
+            Route::match(['post', 'put'], '/save', [SurveyController::class, 'save']);
+            Route::get('/{id}', [SurveyController::class, 'show']);
+            Route::delete('/{id}', [SurveyController::class, 'destroy']);
+        });
     });
 });
 
