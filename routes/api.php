@@ -194,7 +194,7 @@ Route::middleware('api.auth')->group(function () {
     Route::prefix('v1')->group(function () {
         Route::get('/auto-login', [AuthController::class, 'autoLogin']);
         Route::get('/profile', [AuthController::class, 'profileV1']);
-        Route::match(['post', 'put'], '/profile/update', [AuthController::class, 'updateProfileV1']);
+        Route::match(['post', 'put'], '/update-profile', [AuthController::class, 'updateProfileV1']);
         Route::post('/change-password', [AuthController::class, 'changePassword']);
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
         Route::post('/logout', [AuthController::class, 'logout']);
