@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 class SurveyController extends Controller
 {
     // Opsi 1 — Dengan Filter User
-    public function index(Request $request)
+    public function index1(Request $request)
     {
         $user = $request->attributes->get('user');
 
@@ -45,32 +45,32 @@ class SurveyController extends Controller
     }
 
     // Opsi 2 — Tanpa Filter User
-    // public function index1(Request $request)
-    // {
-    //     $surveys = Survey::with('category:id,name')
-    //         ->orderBy('created_at', 'desc')
-    //         ->get();
+    public function index(Request $request)
+    {
+        $surveys = Survey::with('category:id,name')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    //     $data = $surveys->map(function ($survey) {
-    //         return [
-    //             'id' => $survey->id,
-    //             'title' => $survey->title,
-    //             'description' => $survey->description,
-    //             'category_id' => $survey->category_id,
-    //             'category_name' => $survey->category ? $survey->category->name : null,
-    //             'latitude' => $survey->latitude,
-    //             'longitude' => $survey->longitude,
-    //             'created_at' => $survey->created_at
-    //                 ? $survey->created_at->format('Y-m-d H:i:s')
-    //                 : null,
-    //         ];
-    //     });
+        $data = $surveys->map(function ($survey) {
+            return [
+                'id' => $survey->id,
+                'title' => $survey->title,
+                'description' => $survey->description,
+                'category_id' => $survey->category_id,
+                'category_name' => $survey->category ? $survey->category->name : null,
+                'latitude' => $survey->latitude,
+                'longitude' => $survey->longitude,
+                'created_at' => $survey->created_at
+                    ? $survey->created_at->format('Y-m-d H:i:s')
+                    : null,
+            ];
+        });
 
-    //     return response()->json([
-    //         'status' => true,
-    //         'data' => $data,
-    //     ]);
-    // }
+        return response()->json([
+            'status' => true,
+            'data' => $data,
+        ]);
+    }
 
     public function surveyCategories()
     {
