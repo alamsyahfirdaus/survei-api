@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PuskesmasController;
 use App\Http\Controllers\Api\QaController;
 use App\Http\Controllers\Api\RegionController;
 use App\Http\Controllers\Api\UserDeviceController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\PresentationController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Services\Agora\AgoraService;
@@ -202,6 +203,9 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
+        // Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+
         // Category
         Route::get('/categories', [SurveyController::class, 'surveyCategories']);
 
@@ -210,7 +214,8 @@ Route::middleware('api.auth')->group(function () {
             Route::get('/', [SurveyController::class, 'index']);
             Route::match(['post', 'put'], '/save', [SurveyController::class, 'save']);
             Route::get('/{id}', [SurveyController::class, 'show']);
-            Route::delete('/{id}', [SurveyController::class, 'destroy']);
+            Route::match(['post', 'delete'], '/{id}/delete', [SurveyController::class, 'destroy']);
+            // Route::delete('/{id}', [SurveyController::class, 'destroy']);
         });
     });
 });

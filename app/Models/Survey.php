@@ -12,6 +12,19 @@ class Survey extends Model
     protected $table = 'a_surveys';
     protected $primaryKey = 'id';
 
+    protected $fillable = [
+        'user_id',
+        'category_id',
+        'title',
+        'description',
+        'photo',
+        'latitude',
+        'longitude',
+        'address',
+        'qr_code',
+        'status',
+    ];
+
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
